@@ -92,6 +92,7 @@ cargo build --release --bin snforge
 cp target/release/snforge ~/.local/bin/
 
 # Run checks locally
+cd contracts
 scarb fmt --check  # Check formatting
 scarb snforge test # Run tests
 ```
