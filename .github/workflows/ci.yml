@@ -27,25 +27,13 @@ jobs:
         run: |
           git clone https://github.com/software-mansion/asdf-scarb.git ~/.asdf/plugins/scarb
           asdf install scarb 2.11.1
-          asdf local scarb 2.11.1
           asdf global scarb 2.11.1
 
       - name: Install snforge via cargo
         run: |
-          # Clone the starknet-foundry repository at the specific tag
-          git clone --depth 1 --branch v0.38.3 https://github.com/foundry-rs/starknet-foundry.git
-          cd starknet-foundry
-
-          # Build and install snforge
-          cargo build --release --bin snforge
-
-          # Create directory and copy binary
-          mkdir -p ~/.local/bin
-          cp target/release/snforge ~/.local/bin/
-          chmod +x ~/.local/bin/snforge
-
-          # Add to PATH
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          asdf plugin add starknet-foundry
+          asdf install starknet-foundry 0.38.3
+          asdf global starknet-foundry 0.38.3
 
       - name: Verify installations
         run: |
@@ -54,10 +42,13 @@ jobs:
           ~/.local/bin/snforge --version || echo "snforge binary not executable"
 
       - name: Check formatting
-        run: scarb fmt --check
+        run: |
+          cd contracts
+          scarb fmt --check
 
       - name: Run tests
         run: |
+            export PATH=$PATH:/root/.local/bin
             cd contracts
             snforge test
 
