@@ -55,7 +55,7 @@ If you are setup properly, everything should compile and tests should be passing
 
 
 ### Additional
-Join our our [Telegram group](https://t.me/+bPtBG-CEsLlhYzM1)! Don't hesitate to leave a message if you need anything
+Join our our [Telegram group](https://t.me/+bPtBG-CEsLlhYzM1)! Don't hesitate to leave a message if you need anything. Also, if you are willing to contribute but don't find any issue that resonates with your skills, send us a message we will make sure to help you contribute!
 
 
 *This educational implementation is not affiliated with or endorsed by Uniswap Labs.*
@@ -82,14 +82,11 @@ To ensure your code will pass CI checks, set up your local environment with:
 ```bash
 # Install Scarb 2.11.1
 asdf install scarb 2.11.1
-asdf local scarb 2.11.1
+asdf global scarb 2.11.1
 
 # Install snforge 0.38.3
-# Option 1: Clone and build from source
-git clone --depth 1 --branch v0.38.3 https://github.com/foundry-rs/starknet-foundry.git
-cd starknet-foundry
-cargo build --release --bin snforge
-cp target/release/snforge ~/.local/bin/
+asdf install starknet-foundry 0.38.3
+asdf global starknet-foundry 0.38.3
 
 # Run checks locally
 cd contracts
