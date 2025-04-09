@@ -51,6 +51,7 @@ pub mod UniswapV3Pool {
     enum Event {
         Mint: Mint,
         Swap: Swap,
+        Burn: Burn,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -58,6 +59,14 @@ pub mod UniswapV3Pool {
         sender: ContractAddress,
         upper_tick: i32,
         lower_tick: i32,
+        amount: u128,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct Burn {
+        sender: ContractAddress,
+        lower_tick: i32,
+        upper_tick: i32,
         amount: u128,
     }
 
@@ -191,6 +200,83 @@ pub mod UniswapV3Pool {
             manager_dispatcher.mint_callback(amount0_u128, amount1_u128, data);
 
             self.emit(Mint { sender: get_caller_address(), upper_tick, lower_tick, amount });
+
+            (amount0, amount1)
+        }
+
+        fn burn(
+            ref self: ContractState, lower_tick: i32, upper_tick: i32, amount: u128,
+        ) -> (u256, u256) {
+            assert!(lower_tick > MIN_TICK, "lower tick too low");
+            assert!(upper_tick < MAX_TICK, "upper tick too high");
+            assert!(lower_tick <= upper_tick, "lower tick must be lower or equal to upper tick");
+            assert!(amount != 0, "liq amount must be > 0");
+
+            let slot0 = self.slot0.read();
+            let current_tick = slot0.tick;
+            let current_sqrt_price = slot0.sqrt_pricex96;
+            let current_sqrt_price_x96 = FixedQ64x96 { value: current_sqrt_price };
+
+            let sqrt_price_lower_x96 = TickMath::get_sqrt_ratio_at_tick(lower_tick);
+            let sqrt_price_upper_x96 = TickMath::get_sqrt_ratio_at_tick(upper_tick);
+
+            let (amount0, amount1) = if current_tick < lower_tick {
+                let amount0 = calc_amount0_delta(
+                    sqrt_price_lower_x96, sqrt_price_upper_x96, amount,
+                );
+                (amount0, 0_u256)
+            } else if current_tick < upper_tick {
+                let amount0 = calc_amount0_delta(
+                    current_sqrt_price_x96.clone(), sqrt_price_upper_x96, amount,
+                );
+                let amount1 = calc_amount1_delta(
+                    sqrt_price_lower_x96, current_sqrt_price_x96, amount,
+                );
+                (amount0, amount1)
+            } else {
+                let amount1 = calc_amount1_delta(
+                    sqrt_price_lower_x96, sqrt_price_upper_x96, amount,
+                );
+                (0_u256, amount1)
+            };
+
+            let key = Key { owner: get_caller_address(), lower_tick, upper_tick };
+            let mut tick_state = Tick::unsafe_new_contract_state();
+            let mut position_state = Position::unsafe_new_contract_state();
+            let mut bitmap_state = TickBitmap::unsafe_new_contract_state();
+
+            let tick_spacing = 1;
+            let liq_delta = amount.try_into().expect('liq_delta');
+
+            let flipped_lower = tick_state.update(lower_tick, -liq_delta, false);
+            let flipped_upper = tick_state.update(upper_tick, -liq_delta, true);
+
+            if flipped_lower {
+                bitmap_state.flip_tick(lower_tick, tick_spacing);
+            }
+
+            if flipped_upper {
+                bitmap_state.flip_tick(upper_tick, tick_spacing);
+            }
+
+            let liq_delta_i128: i128 = -(amount.try_into().expect('liq_delta_i128'));
+            position_state.update(key, liq_delta_i128);
+            let new_liq = position_state.get(key).liq;
+
+            if current_tick >= lower_tick && current_tick < upper_tick {
+                self.liquidity.write(new_liq.into());
+            }
+
+            let amount0_u128: u128 = amount0.try_into().unwrap_or(0);
+            let amount1_u128: u128 = amount1.try_into().unwrap_or(0);
+
+            let manager_dispatcher = IUniswapV3ManagerDispatcher {
+                contract_address: get_caller_address(),
+            };
+
+            manager_dispatcher.burn_callback(amount0_u128, amount1_u128);
+
+            self.emit(Burn { sender: get_caller_address(), lower_tick, upper_tick, amount });
 
             (amount0, amount1)
         }

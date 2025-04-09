@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod contract_tests {
     mod pool_contract_tests {
+        mod burn_tests;
         mod mint_tests;
         mod swap_tests;
     }
@@ -10,7 +11,6 @@ mod contract_tests {
     mod tick_tests;
     mod utils;
 }
-
 #[cfg(test)]
 mod math_tests {
     mod fullmath_test;
@@ -22,3 +22,4 @@ mod math_tests {
         mod fixed_point_test;
     }
 }
+
