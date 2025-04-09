@@ -1,0 +1,7 @@
+[book]
+authors = ["Augustin Villetard"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Uniswap V3 on Starknet"
+description = "A comprehensive guide to building Uniswap V3 on Starknet"
