@@ -6,7 +6,7 @@ mod UniswapV3Manager {
     };
     use contracts::libraries::utils::math::scale_amount;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use starknet::{ContractAddress, contract_address_const, get_caller_address};
+    use starknet::{ContractAddress, get_caller_address};
     #[storage]
     struct Storage {
         token0: ContractAddress,

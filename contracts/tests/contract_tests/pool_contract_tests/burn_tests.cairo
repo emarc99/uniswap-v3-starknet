@@ -9,21 +9,21 @@ use starknet::ContractAddress;
 
 #[test]
 fn test_burn_position_within_price_range() {
-    let (params, expected_amount0, expected_amount1) = TestParamsImpl::in_range_burn_test_values();
+    let (params, _, _) = TestParamsImpl::in_range_burn_test_values();
     let (pool_address, manager_address, _token0, _token1) = setup_test_environment(params);
 
     let pool_dispatcher = UniswapV3PoolTraitDispatcher { contract_address: pool_address };
     let manager_dispatcher = IUniswapV3ManagerDispatcher { contract_address: manager_address };
 
     // Mint position
-    let (amount0, amount1) = manager_dispatcher
+    let (_amount0, _amount1) = manager_dispatcher
         .mint(params.lower_tick, params.upper_tick, params.liq.try_into().unwrap(), array![]);
     let liquidity_before = pool_dispatcher.get_liquidity();
     assert(liquidity_before == 5670207847624059387904, 'Initial liquidity should be 0');
 
     let burn_amount: u128 = 1000000000000000000000;
     // Burn position
-    let (amount0, amount1) = manager_dispatcher
+    let (_amount0, _amount1) = manager_dispatcher
         .burn(params.lower_tick, params.upper_tick, burn_amount);
 
     let liquidity_after = pool_dispatcher.get_liquidity();
@@ -61,7 +61,7 @@ fn test_burn_position_narrow_price_range() {
 
     let burn_amount: u128 = 1000000000000000000000;
 
-    let (amount0, amount1) = manager_dispatcher
+    let (_amount0, _amount1) = manager_dispatcher
         .burn(params.lower_tick, params.upper_tick, burn_amount);
 
     let liquidity_after = pool_dispatcher.get_liquidity();
@@ -101,7 +101,7 @@ fn test_burn_position_wide_price_range() {
 
     let burn_amount: u128 = 1000000000000000000000;
     // Burn position
-    let (amount0, amount1) = manager_dispatcher
+    let (_amount0, _amount1) = manager_dispatcher
         .burn(params.lower_tick, params.upper_tick, burn_amount);
 
     let liquidity_after = pool_dispatcher.get_liquidity();
