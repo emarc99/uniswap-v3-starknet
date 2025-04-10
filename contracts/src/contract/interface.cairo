@@ -13,6 +13,9 @@ pub trait UniswapV3PoolTrait<TContractState> {
         amount: u128,
         data: Array<felt252>,
     ) -> (u256, u256);
+    fn burn(
+        ref self: TContractState, lower_tick: i32, upper_tick: i32, amount: u128,
+    ) -> (u256, u256);
     fn get_liquidity(self: @TContractState) -> u256;
     fn is_tick_init(self: @TContractState, tick: i32) -> bool;
     fn simulate_swap(
@@ -44,6 +47,7 @@ pub trait IUniswapV3TickBitmap<TContractState> {
 #[starknet::interface]
 pub trait IUniswapV3Manager<TContractState> {
     fn mint_callback(ref self: TContractState, amount0: u128, amount1: u128, data: Array<felt252>);
+    fn burn_callback(ref self: TContractState, amount0: u128, amount1: u128);
     fn swap_callback(
         ref self: TContractState, amount0_delta: i128, amount1_delta: i128, data: Array<felt252>,
     );
@@ -53,6 +57,9 @@ pub trait IUniswapV3Manager<TContractState> {
         upper_tick: i32,
         amount: u128,
         data: Array<felt252>,
+    ) -> (u256, u256);
+    fn burn(
+        ref self: TContractState, lower_tick: i32, upper_tick: i32, amount: u128,
     ) -> (u256, u256);
 }
 
@@ -93,6 +100,7 @@ pub trait IERC20Trait<TContractState> {
     );
     fn increase_allowance(ref self: TContractState, spender: ContractAddress, added_value: felt252);
     fn transfer(ref self: TContractState, recipient: ContractAddress, amount: felt252);
+    fn burn(ref self: TContractState, amount: felt252);
     fn transfer_from(
         ref self: TContractState,
         sender: ContractAddress,

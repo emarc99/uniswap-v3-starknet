@@ -126,6 +126,10 @@ pub mod ERC20 {
             self.spend_allowance(sender, caller, amount);
             self._transfer(sender, recipient, amount);
         }
+
+        fn burn(ref self: ContractState, amount: felt252) {
+            self._burn(amount);
+        }
     }
 
     #[generate_trait]
@@ -154,6 +158,22 @@ pub mod ERC20 {
                     ),
                 );
         }
+
+        fn _burn(ref self: ContractState, amount: felt252) {
+            let caller = get_caller_address();
+            assert(caller.is_non_zero(), Errors::BURN_FROM_ZERO);
+            let supply = self.total_supply.read() + amount;
+            self.total_supply.write(supply);
+            let balance = self.balances.read(caller) - amount;
+            self.balances.write(caller, balance);
+            self
+                .emit(
+                    Event::Transfer(
+                        Transfer { from: caller, to: 0.try_into().unwrap(), value: amount },
+                    ),
+                );
+        }
+
 
         fn spend_allowance(
             ref self: ContractState,
